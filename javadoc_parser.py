@@ -22,6 +22,7 @@ CHILDREN_TAGS=[
 	"div"
 ]
 
+ANCHOR_TAG = 'a'
 
 def get_separator(sep, quantity = 20):
 	return sep*quantity
@@ -34,10 +35,10 @@ class parsed_method(object):
 	description = list()
 	anchor = ""
 
-	def __init__(self, method, soup):
+	def __init__(self, method, anchor, file_path):
 		self.name = method.find(self.METHOD_NAME_TAG).get_text(' ', strip=True)
 		self.set_description(method)
-		self.set_anchor(soup)
+		self.set_anchor(anchor, file_path)
 
 	def set_description(self, method):
 		"""
@@ -46,17 +47,13 @@ class parsed_method(object):
 		for method_description in method.findAll(self.METHOD_DESCRIPTION_TAG):
 			self.description.append(method_description.get_text(' ', strip=True))
 	
-	def set_anchor(self, soup):
+	def set_anchor(self, anchor, file_path):
 		"""
 			Gets the anchor to the method javadoc.
 		""" 
-
-		link_block = soup.findAll("span", class_="memberNameLink")
-		for link in link_block:
-			link_tag = link.find("a")
-			if(self.name == link_tag.string):
-				self.anchor = "file://" + os.getcwd() + "/" + str(link_tag.get('href')).replace("../","")
-				break
+		file_name = "/home/lucas/workspace/eng-teste/prj/zookeper2/org/apache/zookeeper/ServerAdminClient.html"
+		self.anchor = "file://" + file_path + "#" + anchor
+		print(self.anchor)
 
 	def print(self):
 		print("Method Name: " + self.name)
@@ -100,6 +97,16 @@ class parsed_class(object):
                 methods.append(method_detail)
         return methods
 
+    def get_anchors(self, method_container):
+    	anchors = list()
+    	for tag in method_container.find_all(ANCHOR_TAG):
+    		anchor = tag.attrs.get("name")
+    		if(anchor != None and anchor != "method.detail"):
+        		print(anchor)
+        		anchors.append(anchor)
+    	
+    	return anchors
+   
     def print(self):
     	print(get_separator("*"))
     	print("Class Name: " + self.file_)
@@ -227,11 +234,11 @@ def filter_by_documentation(file_list):
 			method_detail = curr_class.get_container(soup, curr_class.METHOD_DETAIL)
 			method_summary = curr_class.get_container(soup, curr_class.METHOD_SUMMARY)
 			if(method_detail != None):
+				anchors = curr_class.get_anchors(method_detail)
 				methods = curr_class.get_methods(method_detail)
-				for method in methods:
-					print(file_)
-					method = parsed_method(method, soup)
-					method.print()
+				for method, anchor in zip(methods, anchors):
+					method = parsed_method(method, anchor, file_)
+					#method.print()
 
 			"""
 			methods = get_methods(soup)
@@ -264,6 +271,7 @@ def filter_by_documentation(file_list):
 def main():
 	my_query = os.getcwd() + "/**/*.html"
 	my_files = find_pattern(my_query)
+	my_files = ["/home/lucas/workspace/eng-teste/prj/zookeper2/org/apache/zookeeper/ServerAdminClient.html"]
 	res = filter_by_documentation(my_files)
 	res.log_file()
 
