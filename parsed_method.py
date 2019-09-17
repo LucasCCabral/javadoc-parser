@@ -3,12 +3,11 @@ class ParsedMethod(object):
 	METHOD_DESCRIPTION_TAG = "div"
 	ANCHOR_TAG = 'a'
 
-	name = ""
-	description = list()
-	anchor = ""
 
 	def __init__(self, method, anchor, file_path):
+		self.anchor = ""
 		self.name = method.find(self.METHOD_NAME_TAG).get_text(' ', strip=True)
+		self.description = list()
 		self.set_description(method)
 		self.set_anchor(anchor, file_path)
 
@@ -16,6 +15,7 @@ class ParsedMethod(object):
 		"""
 			Each method may habe more than one description.
 		"""
+		self.description.clear()
 		for method_description in method.findAll(self.METHOD_DESCRIPTION_TAG):
 			self.description.append(method_description.get_text(' ', strip=True))
 	
@@ -24,4 +24,3 @@ class ParsedMethod(object):
 			Gets the anchor to the method javadoc.
 		""" 
 		self.anchor = "file://" + file_path + "#" + anchor
-		print(self.anchor)

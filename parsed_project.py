@@ -15,7 +15,8 @@ class ParsedProject(object):
 		@param query the pattern that will be used to find items,
 		@returns a list with all the java files found in dir.
 		"""
-		return  glob.glob(self.prj_path, recursive=True)
+		html_query = self.prj_path + "**/*.html"
+		return  glob.glob(html_query, recursive=True)
 
 
 	def add_class(self, class_):
@@ -25,6 +26,21 @@ class ParsedProject(object):
 		self.classes.append(class_)
 
 	def get_all_classes(self):
-		for file_ in self.find_all_html(self.prj_path):
+
+		all_html_files = self.find_all_html(self.prj_path)
+		for file_ in all_html_files:
 			class_ = ParsedClass(file_)
-			class_.get_all_methods()
+			class_.get_all_methods()			
+			self.classes.append(class_)
+			print("Parsing file #{} of #{}.".format(self.classes.index(class_), len(all_html_files)))
+
+	def gen_log_file(self, dest_file):
+
+		try:
+		    os.remove(dest_file)
+		except OSError:
+		    pass
+
+		for class_ in self.classes:
+			if(class_.class_methods!= []):
+				class_.log_class(dest_file)
